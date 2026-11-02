@@ -1,0 +1,2 @@
+# focused
+Aplicação para foco
