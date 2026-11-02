@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FocusFlow · Pomodoro & Produtividade</title>
+<title>FocusFlow · Pomodoro Desktop Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -52,7 +52,7 @@
   .theme-text { color: var(--theme-color); transition: color 0.35s ease; }
   .theme-bg { background-color: var(--theme-color); transition: background-color 0.35s ease; }
   .theme-border { border-color: var(--theme-color); transition: border-color 0.35s ease; }
-  .theme-glow { box-shadow: 0 0 32px var(--theme-glow); transition: box-shadow 0.35s ease; }
+  .theme-glow { box-shadow: 0 0 36px var(--theme-glow); transition: box-shadow 0.35s ease; }
   .theme-ring-stroke { stroke: var(--theme-color); transition: stroke 0.35s ease, stroke-dashoffset 0.35s linear; }
 
   /* Custom Scrollbar */
@@ -69,15 +69,15 @@
   input[type=number] { -moz-appearance: textfield; }
 </style>
 </head>
-<body class="min-h-screen py-6 px-3 sm:px-6 pb-20 selection:bg-white/20">
+<body class="min-h-screen py-8 px-4 lg:px-10 pb-24 selection:bg-white/20">
 
-<div class="max-w-4xl mx-auto">
+<div class="max-w-7xl mx-auto flex flex-col gap-6">
 
-  <!-- Header -->
-  <header class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-divider">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl theme-bg flex items-center justify-center text-bg font-bold shadow-lg">
-        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+  <!-- Desktop App Header -->
+  <header class="bg-surface border border-divider rounded-3xl p-5 flex items-center justify-between gap-6 shadow-xl">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl theme-bg flex items-center justify-center text-bg font-bold shadow-lg">
+        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <circle cx="12" cy="13" r="8"/>
           <path d="M12 9v4l2.5 2.5"/>
           <path d="M9 3h6"/>
@@ -85,16 +85,19 @@
         </svg>
       </div>
       <div>
-        <h1 class="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wide leading-none">
-          FocusFlow
-        </h1>
-        <p class="text-xs text-textDim mt-0.5">Pomodoro · Gestão de Tarefas · Áudio Binaural</p>
+        <div class="flex items-center gap-2">
+          <h1 class="font-display text-2xl lg:text-3xl font-bold uppercase tracking-wide leading-none">
+            FocusFlow Desktop
+          </h1>
+          <span class="text-[10px] uppercase tracking-wider bg-surface2 px-2.5 py-0.5 rounded-full text-accent font-semibold border border-divider">v2.5 Pro</span>
+        </div>
+        <p class="text-xs text-textDim mt-1">Ambiente de Trabalho Focado · Som Binaural · Gestão de Tarefas</p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-3">
       <!-- Keyboard Shortcuts Hint -->
-      <div class="hidden md:flex items-center gap-1.5 text-xs text-textDim bg-surface border border-divider px-3 py-1.5 rounded-xl">
+      <div class="hidden xl:flex items-center gap-2 text-xs text-textDim bg-bg border border-divider px-3.5 py-2 rounded-2xl">
         <span>Atalhos:</span>
         <kbd class="px-1.5 py-0.5 bg-surface2 rounded text-[11px] text-textMain font-mono">Espaço</kbd>
         <span>Play/Pause</span>
@@ -103,40 +106,40 @@
       </div>
 
       <!-- Settings Modal Trigger -->
-      <button id="openSettingsBtn" class="p-2.5 rounded-xl bg-surface hover:bg-surface2 border border-divider text-textDim hover:text-textMain transition flex items-center gap-1.5 text-xs font-semibold">
+      <button id="openSettingsBtn" class="py-2.5 px-4 rounded-2xl bg-surface2 hover:bg-surface3 border border-divider text-textDim hover:text-textMain transition flex items-center gap-2 text-xs font-semibold">
         <svg class="w-4 h-4 theme-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
-        <span class="hidden sm:inline">Ajustes</span>
+        <span>Configurações</span>
       </button>
     </div>
   </header>
 
-  <!-- Main Grid Layout -->
+  <!-- Desktop Main 2-Column Grid Layout -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    <!-- LEFT COLUMN: TIMER & AMBIENT AUDIO (7 Cols) -->
-    <div class="lg:col-span-7 flex flex-col gap-5">
+    <!-- LEFT COLUMN: LARGE TIMER & AMBIENT AUDIO (7 Cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
 
       <!-- Timer Card -->
-      <div class="bg-surface border border-divider rounded-3xl p-5 sm:p-7 flex flex-col items-center relative overflow-hidden theme-glow">
+      <div class="bg-surface border border-divider rounded-3xl p-6 lg:p-10 flex flex-col items-center relative overflow-hidden theme-glow">
 
         <!-- Mode Selector Tabs -->
-        <div class="grid grid-cols-3 gap-1.5 bg-bg p-1.5 rounded-2xl border border-divider w-full max-w-md mb-6">
-          <button data-mode="focus" class="mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all">
+        <div class="grid grid-cols-3 gap-2 bg-bg p-2 rounded-2xl border border-divider w-full max-w-md mb-8">
+          <button data-mode="focus" class="mode-tab py-2.5 px-3 rounded-xl text-sm font-semibold transition-all">
             Foco
           </button>
-          <button data-mode="shortBreak" class="mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all">
+          <button data-mode="shortBreak" class="mode-tab py-2.5 px-3 rounded-xl text-sm font-semibold transition-all">
             Pausa Curta
           </button>
-          <button data-mode="longBreak" class="mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all">
+          <button data-mode="longBreak" class="mode-tab py-2.5 px-3 rounded-xl text-sm font-semibold transition-all">
             Pausa Longa
           </button>
         </div>
 
-        <!-- Circular Countdown Ring -->
-        <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center my-2">
+        <!-- Circular Countdown Ring (Larger for Desktop) -->
+        <div class="relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center my-2">
           <svg class="w-full h-full -rotate-90" viewBox="0 0 240 240">
             <!-- Track -->
             <circle cx="120" cy="120" r="106" fill="none" stroke="#1E1E28" stroke-width="10"></circle>
@@ -148,47 +151,47 @@
 
           <!-- Center Clock & Active Task -->
           <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-            <span id="modeBadge" class="text-[11px] font-display uppercase tracking-[0.2em] theme-text font-semibold mb-1">
+            <span id="modeBadge" class="text-xs font-display uppercase tracking-[0.25em] theme-text font-semibold mb-1.5">
               Sessão de Foco
             </span>
-            <div id="timeDisplay" class="font-mono font-bold text-5xl sm:text-6xl tracking-tight text-textMain tabular-nums select-none">
+            <div id="timeDisplay" class="font-mono font-bold text-6xl sm:text-7xl tracking-tight text-textMain tabular-nums select-none">
               25:00
             </div>
             <!-- Cycle Dots -->
-            <div id="cycleDots" class="flex items-center gap-2 mt-3" title="Ciclos até a pausa longa"></div>
+            <div id="cycleDots" class="flex items-center gap-2.5 mt-4" title="Ciclos até a pausa longa"></div>
           </div>
         </div>
 
         <!-- Quick Time Adjusters (-5 min / +5 min) -->
-        <div class="flex items-center gap-2 mt-2 mb-5">
-          <button id="minusMinBtn" class="px-3 py-1 rounded-lg bg-surface2 hover:bg-surface3 border border-divider text-xs font-semibold text-textDim hover:text-textMain transition">
+        <div class="flex items-center gap-3 mt-4 mb-8">
+          <button id="minusMinBtn" class="px-3.5 py-1.5 rounded-xl bg-surface2 hover:bg-surface3 border border-divider text-xs font-semibold text-textDim hover:text-textMain transition">
             -5 min
           </button>
-          <span id="activeTaskBanner" class="text-xs text-textDim truncate max-w-[200px] sm:max-w-[260px] px-2">
+          <span id="activeTaskBanner" class="text-xs text-textDim truncate max-w-[280px] sm:max-w-[340px] px-2 font-medium">
             Nenhuma tarefa selecionada
           </span>
-          <button id="plusMinBtn" class="px-3 py-1 rounded-lg bg-surface2 hover:bg-surface3 border border-divider text-xs font-semibold text-textDim hover:text-textMain transition">
+          <button id="plusMinBtn" class="px-3.5 py-1.5 rounded-xl bg-surface2 hover:bg-surface3 border border-divider text-xs font-semibold text-textDim hover:text-textMain transition">
             +5 min
           </button>
         </div>
 
         <!-- Primary Controls -->
-        <div class="flex items-center gap-3 w-full max-w-xs justify-center">
-          <button id="resetTimerBtn" title="Reiniciar (R)" class="p-3.5 rounded-2xl bg-surface2 hover:bg-surface3 border border-divider text-textDim hover:text-textMain transition">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="flex items-center gap-4 w-full max-w-sm justify-center">
+          <button id="resetTimerBtn" title="Reiniciar (R)" class="p-4 rounded-2xl bg-surface2 hover:bg-surface3 border border-divider text-textDim hover:text-textMain transition">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
             </svg>
           </button>
 
-          <button id="startPauseBtn" class="flex-1 py-3.5 px-6 rounded-2xl theme-bg text-bg font-display text-lg uppercase font-bold tracking-wider shadow-lg hover:opacity-95 active:scale-[0.98] transition flex items-center justify-center gap-2">
-            <svg id="startPauseIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <button id="startPauseBtn" class="flex-1 py-4 px-8 rounded-2xl theme-bg text-bg font-display text-xl uppercase font-bold tracking-wider shadow-xl hover:opacity-95 active:scale-[0.98] transition flex items-center justify-center gap-2.5">
+            <svg id="startPauseIcon" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
             <span id="startPauseText">Iniciar</span>
           </button>
 
-          <button id="skipTimerBtn" title="Pular etapa" class="p-3.5 rounded-2xl bg-surface2 hover:bg-surface3 border border-divider text-textDim hover:text-textMain transition">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button id="skipTimerBtn" title="Pular etapa" class="p-4 rounded-2xl bg-surface2 hover:bg-surface3 border border-divider text-textDim hover:text-textMain transition">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
             </svg>
           </button>
@@ -196,61 +199,61 @@
       </div>
 
       <!-- Ambient Focus Sound Generator (Web Audio API) -->
-      <div class="bg-surface border border-divider rounded-3xl p-5">
-        <div class="flex items-center justify-between gap-2 mb-3">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 theme-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="bg-surface border border-divider rounded-3xl p-6">
+        <div class="flex items-center justify-between gap-4 mb-4">
+          <div class="flex items-center gap-2.5">
+            <svg class="w-5 h-5 theme-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>
             </svg>
             <h2 class="font-display text-sm uppercase tracking-wider font-semibold text-textMain">
               Som Ambiente de Foco (Sintetizador Nativo)
             </h2>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-[11px] text-textDim">Volume</span>
-            <input id="ambientVolume" type="range" min="0" max="100" value="35" class="w-20 accent-white cursor-pointer h-1.5 bg-surface3 rounded-lg">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xs text-textDim">Volume</span>
+            <input id="ambientVolume" type="range" min="0" max="100" value="35" class="w-28 accent-white cursor-pointer h-2 bg-surface3 rounded-lg">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <button data-sound="off" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-surface2 text-xs font-semibold text-textMain flex items-center justify-center gap-1.5 transition">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <button data-sound="off" class="sound-btn py-3 px-3 rounded-2xl border border-divider bg-surface2 text-xs font-semibold text-textMain flex items-center justify-center gap-2 transition">
             <span>🔇 Desligado</span>
           </button>
-          <button data-sound="brown" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-1.5 transition">
+          <button data-sound="brown" class="sound-btn py-3 px-3 rounded-2xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-2 transition">
             <span>🌊 Ruído Marrom</span>
           </button>
-          <button data-sound="rain" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-1.5 transition">
+          <button data-sound="rain" class="sound-btn py-3 px-3 rounded-2xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-2 transition">
             <span>🌧️ Chuva Suave</span>
           </button>
-          <button data-sound="binaural" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-1.5 transition">
+          <button data-sound="binaural" class="sound-btn py-3 px-3 rounded-2xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-2 transition">
             <span>🧠 Alpha 40Hz</span>
           </button>
         </div>
       </div>
 
+    </div>
+
+    <!-- RIGHT COLUMN: STATS, TASKS & LOG (5 Cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+
       <!-- Daily Stats Overview -->
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-3 gap-4">
         <div class="bg-surface border border-divider rounded-2xl p-4">
           <span class="text-[11px] uppercase tracking-wider text-textDim font-semibold">Pomodoros Hoje</span>
-          <div id="statPomodoros" class="font-display text-2xl sm:text-3xl font-bold theme-text mt-1">0</div>
+          <div id="statPomodoros" class="font-display text-3xl font-bold theme-text mt-1.5">0</div>
         </div>
         <div class="bg-surface border border-divider rounded-2xl p-4">
           <span class="text-[11px] uppercase tracking-wider text-textDim font-semibold">Minutos Focados</span>
-          <div id="statMinutes" class="font-display text-2xl sm:text-3xl font-bold text-textMain mt-1">0m</div>
+          <div id="statMinutes" class="font-display text-3xl font-bold text-textMain mt-1.5">0m</div>
         </div>
         <div class="bg-surface border border-divider rounded-2xl p-4">
           <span class="text-[11px] uppercase tracking-wider text-textDim font-semibold">Tarefas Feitas</span>
-          <div id="statTasks" class="font-display text-2xl sm:text-3xl font-bold text-shortBreak mt-1">0</div>
+          <div id="statTasks" class="font-display text-3xl font-bold text-shortBreak mt-1.5">0</div>
         </div>
       </div>
 
-    </div>
-
-    <!-- RIGHT COLUMN: TASKS & SESSION LOG (5 Cols) -->
-    <div class="lg:col-span-5 flex flex-col gap-5">
-
       <!-- Tasks Panel -->
-      <div class="bg-surface border border-divider rounded-3xl p-5 flex flex-col">
+      <div class="bg-surface border border-divider rounded-3xl p-6 flex flex-col">
         <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="font-display text-lg uppercase tracking-wide font-semibold text-textMain">
@@ -264,28 +267,28 @@
         </div>
 
         <!-- Add Task Form -->
-        <form id="addTaskForm" class="flex flex-col gap-2.5 bg-bg p-3 rounded-2xl border border-divider mb-4">
+        <form id="addTaskForm" class="flex flex-col gap-3 bg-bg p-3.5 rounded-2xl border border-divider mb-4">
           <input id="taskTitleInput" type="text" required placeholder="No que você vai trabalhar agora?"
             class="w-full bg-transparent text-sm text-textMain placeholder-textDim/60 focus:outline-none">
-          <div class="flex items-center justify-between pt-2 border-t border-divider/60">
-            <div class="flex items-center gap-1.5 text-xs text-textDim">
+          <div class="flex items-center justify-between pt-2.5 border-t border-divider/60">
+            <div class="flex items-center gap-2 text-xs text-textDim">
               <span>Pomodoros est.:</span>
               <button type="button" id="decEstBtn" class="w-6 h-6 rounded-lg bg-surface2 text-textMain font-bold">-</button>
               <input id="taskEstInput" type="number" min="1" max="20" value="1" class="w-8 text-center bg-transparent text-textMain font-semibold font-mono focus:outline-none">
               <button type="button" id="incEstBtn" class="w-6 h-6 rounded-lg bg-surface2 text-textMain font-bold">+</button>
             </div>
-            <button type="submit" class="px-3.5 py-1.5 rounded-xl theme-bg text-bg text-xs font-bold uppercase tracking-wider hover:opacity-90 transition">
+            <button type="submit" class="px-4 py-2 rounded-xl theme-bg text-bg text-xs font-bold uppercase tracking-wider hover:opacity-90 transition">
               + Adicionar
             </button>
           </div>
         </form>
 
         <!-- Task List -->
-        <ul id="taskList" class="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1"></ul>
+        <ul id="taskList" class="flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-1"></ul>
       </div>
 
       <!-- Recent Completed Sessions Log -->
-      <div class="bg-surface border border-divider rounded-3xl p-5">
+      <div class="bg-surface border border-divider rounded-3xl p-6">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display text-sm uppercase tracking-wider font-semibold text-textMain">
             Histórico de Sessões de Hoje
@@ -470,7 +473,7 @@ function applyTheme(mode) {
 
   document.querySelectorAll(".mode-tab").forEach(btn => {
     const active = btn.dataset.mode === mode;
-    btn.className = `mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+    btn.className = `mode-tab py-2.5 px-3 rounded-xl text-sm font-semibold transition-all ${
       active ? "theme-bg text-bg shadow" : "text-textDim hover:text-textMain"
     }`;
   });
@@ -485,7 +488,7 @@ function formatClock(sec) {
 function updateTimerUI() {
   const formatted = formatClock(remainingSeconds);
   timeDisplay.textContent = formatted;
-  document.title = `${formatted} · ${MODE_META[currentMode].label} | FocusFlow`;
+  document.title = `${formatted} · ${MODE_META[currentMode].label} | FocusFlow Desktop`;
 
   const circumference = 666;
   const pct = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0;
@@ -498,7 +501,7 @@ function updateTimerUI() {
   for (let i = 0; i < interval; i++) {
     const dot = document.createElement("span");
     const filled = i < currentInCycle;
-    dot.className = `w-2.5 h-2.5 rounded-full transition-all ${
+    dot.className = `w-3 h-3 rounded-full transition-all ${
       filled ? "theme-bg scale-110" : "bg-surface3"
     }`;
     cycleDots.appendChild(dot);
@@ -607,7 +610,6 @@ function playSoundEffect(type) {
     const now = audioCtx.currentTime;
 
     if (type === "start") {
-      // Som ascendente duplo para Iniciar
       const freqs = [440, 659.25];
       freqs.forEach((f, idx) => {
         const osc = audioCtx.createOscillator();
@@ -622,7 +624,6 @@ function playSoundEffect(type) {
         osc.stop(now + idx * 0.08 + 0.16);
       });
     } else if (type === "pause") {
-      // Som descendente suave para Pausar
       const freqs = [587.33, 392.0];
       freqs.forEach((f, idx) => {
         const osc = audioCtx.createOscillator();
@@ -637,7 +638,6 @@ function playSoundEffect(type) {
         osc.stop(now + idx * 0.08 + 0.16);
       });
     } else if (type === "complete") {
-      // Acorde melódico de conclusão de tempo
       const notes = [523.25, 659.25, 783.99, 1046.5];
       notes.forEach((freq, i) => {
         const osc = audioCtx.createOscillator();
@@ -671,7 +671,7 @@ function startAmbientSound(mode) {
 
   document.querySelectorAll(".sound-btn").forEach(btn => {
     const active = btn.dataset.sound === mode;
-    btn.className = `sound-btn py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+    btn.className = `sound-btn py-3 px-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
       active
         ? "theme-border bg-surface2 text-textMain"
         : "border-divider bg-bg text-textDim hover:text-textMain"
@@ -702,7 +702,6 @@ function startAmbientSound(mode) {
           lastOut = output[i];
           output[i] *= 3.5;
         } else {
-          // Soft filtered rain texture
           output[i] = (lastOut + 0.12 * white) / 1.12;
           lastOut = output[i];
           output[i] *= 1.6;
@@ -722,7 +721,6 @@ function startAmbientSound(mode) {
       whiteNoise.start(0);
       ambientNode = whiteNoise;
     } else if (mode === "binaural") {
-      // 200Hz Left + 240Hz Right = 40Hz Gamma/Alpha Focus Wave
       const osc1 = audioCtx.createOscillator();
       const osc2 = audioCtx.createOscillator();
       osc1.type = "sine";
@@ -746,9 +744,7 @@ function startAmbientSound(mode) {
         }
       };
     }
-  } catch (e) {
-    console.warn("Erro ao iniciar áudio ambiente:", e);
-  }
+  } catch (e) {}
 }
 
 document.querySelectorAll(".sound-btn").forEach(btn => {
@@ -787,7 +783,7 @@ function renderTasks() {
   state.tasks.forEach(task => {
     const isSelected = task.id === state.activeTaskId;
     const li = document.createElement("li");
-    li.className = `group flex items-center justify-between gap-3 p-3 rounded-2xl border transition cursor-pointer ${
+    li.className = `group flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition cursor-pointer ${
       isSelected
         ? "bg-surface2 theme-border"
         : "bg-bg border-divider hover:border-textDim/40"
@@ -800,12 +796,12 @@ function renderTasks() {
         }">
           ${task.completed ? `<svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ""}
         </button>
-        <span class="text-xs sm:text-sm font-medium truncate ${task.completed ? "line-through text-textDim" : "text-textMain"}">
+        <span class="text-sm font-medium truncate ${task.completed ? "line-through text-textDim" : "text-textMain"}">
           ${task.title}
         </span>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <span class="font-mono text-xs px-2 py-0.5 rounded-lg bg-surface border border-divider text-textDim">
+      <div class="flex items-center gap-2.5 shrink-0">
+        <span class="font-mono text-xs px-2.5 py-1 rounded-xl bg-surface border border-divider text-textDim">
           🍅 ${task.donePomos}/${task.est}
         </span>
         <button type="button" class="delete-task-btn p-1 rounded-lg text-textDim hover:text-red-400 opacity-70 group-hover:opacity-100 transition" title="Excluir tarefa">
@@ -859,10 +855,10 @@ function renderStats() {
 
   state.stats.history.forEach(item => {
     const li = document.createElement("li");
-    li.className = "flex items-center justify-between bg-bg px-3 py-2 rounded-xl border border-divider/60";
+    li.className = "flex items-center justify-between bg-bg px-3.5 py-2.5 rounded-xl border border-divider/60";
     li.innerHTML = `
       <span class="truncate pr-2 text-textMain font-medium">🍅 ${item.title}</span>
-      <span class="font-mono text-[11px] text-textDim shrink-0">${item.mins}m · ${item.time}</span>
+      <span class="font-mono text-xs text-textDim shrink-0">${item.mins}m · ${item.time}</span>
     `;
     historyList.appendChild(li);
   });
@@ -888,7 +884,6 @@ document.getElementById("skipTimerBtn").addEventListener("click", () => {
   completeCurrentSession();
 });
 
-// Diminuir e Aumentar de 5 em 5 minutos (300 segundos) e atualizar também no cache
 document.getElementById("minusMinBtn").addEventListener("click", () => {
   remainingSeconds = Math.max(300, remainingSeconds - 300);
   totalSeconds = Math.max(300, remainingSeconds);
@@ -917,7 +912,6 @@ document.querySelectorAll(".mode-tab").forEach(btn => {
   btn.addEventListener("click", () => switchMode(btn.dataset.mode, false, false));
 });
 
-// Add Task Form
 const taskTitleInput = document.getElementById("taskTitleInput");
 const taskEstInput = document.getElementById("taskEstInput");
 
