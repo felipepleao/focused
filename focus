@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FocusFlow · Pomodoro & Produtividade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          bg: '#0B0B0F',
+          surface: '#14141B',
+          surface2: '#1E1E28',
+          surface3: '#282836',
+          divider: '#2B2B3A',
+          textMain: '#F5F5FA',
+          textDim: '#9A9AB0',
+          focus: '#FF6B6B',
+          shortBreak: '#10B981',
+          longBreak: '#3B82F6',
+          accent: '#A970FF'
+        },
+        fontFamily: {
+          display: ['Oswald', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --theme-color: #FF6B6B;
+    --theme-glow: rgba(255, 107, 107, 0.22);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background-color: #0B0B0F;
+    color: #F5F5FA;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Dynamic Theme Utilities */
+  .theme-text { color: var(--theme-color); transition: color 0.35s ease; }
+  .theme-bg { background-color: var(--theme-color); transition: background-color 0.35s ease; }
+  .theme-border { border-color: var(--theme-color); transition: border-color 0.35s ease; }
+  .theme-glow { box-shadow: 0 0 32px var(--theme-glow); transition: box-shadow 0.35s ease; }
+  .theme-ring-stroke { stroke: var(--theme-color); transition: stroke 0.35s ease, stroke-dashoffset 0.35s linear; }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0B0B0F; }
+  ::-webkit-scrollbar-thumb { background: #2B2B3A; border-radius: 9999px; }
+
+  /* Hide number spinners */
+  input[type=number]::-webkit-inner-spin-button, 
+  input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+  }
+  input[type=number] { -moz-appearance: textfield; }
+</style>
+</head>
+<body class="min-h-screen py-6 px-3 sm:px-6 pb-20 selection:bg-white/20">
+
+<div class="max-w-4xl mx-auto">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-divider">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl theme-bg flex items-center justify-center text-bg font-bold shadow-lg">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="13" r="8"/>
+          <path d="M12 9v4l2.5 2.5"/>
+          <path d="M9 3h6"/>
+          <path d="M12 3v2"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wide leading-none">
+          FocusFlow
+        </h1>
+        <p class="text-xs text-textDim mt-0.5">Pomodoro · Gestão de Tarefas · Áudio Binaural</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Keyboard Shortcuts Hint -->
+      <div class="hidden md:flex items-center gap-1.5 text-xs text-textDim bg-surface border border-divider px-3 py-1.5 rounded-xl">
+        <span>Atalhos:</span>
+        <kbd class="px-1.5 py-0.5 bg-surface2 rounded text-[11px] text-textMain font-mono">Espaço</kbd>
+        <span>Play/Pause</span>
+        <kbd class="px-1.5 py-0.5 bg-surface2 rounded text-[11px] text-textMain font-mono ml-1">R</kbd>
+        <span>Reset</span>
+      </div>
+
+      <!-- Settings Modal Trigger -->
+      <button id="openSettingsBtn" class="p-2.5 rounded-xl bg-surface hover:bg-surface2 border border-divider text-textDim hover:text-textMain transition flex items-center gap-1.5 text-xs font-semibold">
+        <svg class="w-4 h-4 theme-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="hidden sm:inline">Ajustes</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- LEFT COLUMN: TIMER & AMBIENT AUDIO (7 Cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-5">
+
+      <!-- Timer Card -->
+      <div class="bg-surface border border-divider rounded-3xl p-5 sm:p-7 flex flex-col items-center relative overflow-hidden theme-glow">
+
+        <!-- Mode Selector Tabs -->
+        <div class="grid grid-cols-3 gap-1.5 bg-bg p-1.5 rounded-2xl border border-divider w-full max-w-md mb-6">
+          <button data-mode="focus" class="mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all">
+            Foco
+          </button>
+          <button data-mode="shortBreak" class="mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all">
+            Pausa Curta
+          </button>
+          <button data-mode="longBreak" class="mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all">
+            Pausa Longa
+          </button>
+        </div>
+
+        <!-- Circular Countdown Ring -->
+        <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center my-2">
+          <svg class="w-full h-full -rotate-90" viewBox="0 0 240 240">
+            <!-- Track -->
+            <circle cx="120" cy="120" r="106" fill="none" stroke="#1E1E28" stroke-width="10"></circle>
+            <!-- Animated Progress -->
+            <circle id="timerRing" cx="120" cy="120" r="106" fill="none" stroke-width="10"
+              stroke-dasharray="666" stroke-dashoffset="0" stroke-linecap="round"
+              class="theme-ring-stroke"></circle>
+          </svg>
+
+          <!-- Center Clock & Active Task -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+            <span id="modeBadge" class="text-[11px] font-display uppercase tracking-[0.2em] theme-text font-semibold mb-1">
+              Sessão de Foco
+            </span>
+            <div id="timeDisplay" class="font-mono font-bold text-5xl sm:text-6xl tracking-tight text-textMain tabular-nums select-none">
+              25:00
+            </div>
+            <!-- Cycle Dots -->
+            <div id="cycleDots" class="flex items-center gap-2 mt-3" title="Ciclos até a pausa longa"></div>
+          </div>
+        </div>
+
+        <!-- Quick Time Adjusters (-5 min / +5 min) -->
+        <div class="flex items-center gap-2 mt-2 mb-5">
+          <button id="minusMinBtn" class="px-3 py-1 rounded-lg bg-surface2 hover:bg-surface3 border border-divider text-xs font-semibold text-textDim hover:text-textMain transition">
+            -5 min
+          </button>
+          <span id="activeTaskBanner" class="text-xs text-textDim truncate max-w-[200px] sm:max-w-[260px] px-2">
+            Nenhuma tarefa selecionada
+          </span>
+          <button id="plusMinBtn" class="px-3 py-1 rounded-lg bg-surface2 hover:bg-surface3 border border-divider text-xs font-semibold text-textDim hover:text-textMain transition">
+            +5 min
+          </button>
+        </div>
+
+        <!-- Primary Controls -->
+        <div class="flex items-center gap-3 w-full max-w-xs justify-center">
+          <button id="resetTimerBtn" title="Reiniciar (R)" class="p-3.5 rounded-2xl bg-surface2 hover:bg-surface3 border border-divider text-textDim hover:text-textMain transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+            </svg>
+          </button>
+
+          <button id="startPauseBtn" class="flex-1 py-3.5 px-6 rounded-2xl theme-bg text-bg font-display text-lg uppercase font-bold tracking-wider shadow-lg hover:opacity-95 active:scale-[0.98] transition flex items-center justify-center gap-2">
+            <svg id="startPauseIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <span id="startPauseText">Iniciar</span>
+          </button>
+
+          <button id="skipTimerBtn" title="Pular etapa" class="p-3.5 rounded-2xl bg-surface2 hover:bg-surface3 border border-divider text-textDim hover:text-textMain transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ambient Focus Sound Generator (Web Audio API) -->
+      <div class="bg-surface border border-divider rounded-3xl p-5">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 theme-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>
+            </svg>
+            <h2 class="font-display text-sm uppercase tracking-wider font-semibold text-textMain">
+              Som Ambiente de Foco (Sintetizador Nativo)
+            </h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] text-textDim">Volume</span>
+            <input id="ambientVolume" type="range" min="0" max="100" value="35" class="w-20 accent-white cursor-pointer h-1.5 bg-surface3 rounded-lg">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button data-sound="off" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-surface2 text-xs font-semibold text-textMain flex items-center justify-center gap-1.5 transition">
+            <span>🔇 Desligado</span>
+          </button>
+          <button data-sound="brown" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-1.5 transition">
+            <span>🌊 Ruído Marrom</span>
+          </button>
+          <button data-sound="rain" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-1.5 transition">
+            <span>🌧️ Chuva Suave</span>
+          </button>
+          <button data-sound="binaural" class="sound-btn py-2.5 px-3 rounded-xl border border-divider bg-bg text-xs font-semibold text-textDim hover:text-textMain flex items-center justify-center gap-1.5 transition">
+            <span>🧠 Alpha 40Hz</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Daily Stats Overview -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-surface border border-divider rounded-2xl p-4">
+          <span class="text-[11px] uppercase tracking-wider text-textDim font-semibold">Pomodoros Hoje</span>
+          <div id="statPomodoros" class="font-display text-2xl sm:text-3xl font-bold theme-text mt-1">0</div>
+        </div>
+        <div class="bg-surface border border-divider rounded-2xl p-4">
+          <span class="text-[11px] uppercase tracking-wider text-textDim font-semibold">Minutos Focados</span>
+          <div id="statMinutes" class="font-display text-2xl sm:text-3xl font-bold text-textMain mt-1">0m</div>
+        </div>
+        <div class="bg-surface border border-divider rounded-2xl p-4">
+          <span class="text-[11px] uppercase tracking-wider text-textDim font-semibold">Tarefas Feitas</span>
+          <div id="statTasks" class="font-display text-2xl sm:text-3xl font-bold text-shortBreak mt-1">0</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: TASKS & SESSION LOG (5 Cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+
+      <!-- Tasks Panel -->
+      <div class="bg-surface border border-divider rounded-3xl p-5 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="font-display text-lg uppercase tracking-wide font-semibold text-textMain">
+              Fila de Tarefas
+            </h2>
+            <p id="tasksSummaryText" class="text-xs text-textDim">Selecione uma tarefa para vincular ao foco</p>
+          </div>
+          <button id="clearDoneTasksBtn" class="text-xs text-textDim hover:text-textMain underline">
+            Limpar concluídas
+          </button>
+        </div>
+
+        <!-- Add Task Form -->
+        <form id="addTaskForm" class="flex flex-col gap-2.5 bg-bg p-3 rounded-2xl border border-divider mb-4">
+          <input id="taskTitleInput" type="text" required placeholder="No que você vai trabalhar agora?"
+            class="w-full bg-transparent text-sm text-textMain placeholder-textDim/60 focus:outline-none">
+          <div class="flex items-center justify-between pt-2 border-t border-divider/60">
+            <div class="flex items-center gap-1.5 text-xs text-textDim">
+              <span>Pomodoros est.:</span>
+              <button type="button" id="decEstBtn" class="w-6 h-6 rounded-lg bg-surface2 text-textMain font-bold">-</button>
+              <input id="taskEstInput" type="number" min="1" max="20" value="1" class="w-8 text-center bg-transparent text-textMain font-semibold font-mono focus:outline-none">
+              <button type="button" id="incEstBtn" class="w-6 h-6 rounded-lg bg-surface2 text-textMain font-bold">+</button>
+            </div>
+            <button type="submit" class="px-3.5 py-1.5 rounded-xl theme-bg text-bg text-xs font-bold uppercase tracking-wider hover:opacity-90 transition">
+              + Adicionar
+            </button>
+          </div>
+        </form>
+
+        <!-- Task List -->
+        <ul id="taskList" class="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1"></ul>
+      </div>
+
+      <!-- Recent Completed Sessions Log -->
+      <div class="bg-surface border border-divider rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display text-sm uppercase tracking-wider font-semibold text-textMain">
+            Histórico de Sessões de Hoje
+          </h3>
+          <button id="resetStatsBtn" class="text-[11px] text-textDim hover:text-red-400 transition">
+            Zerar dia
+          </button>
+        </div>
+        <ul id="historyList" class="space-y-2 max-h-40 overflow-y-auto text-xs text-textDim"></ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="bg-surface border border-divider rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+    <div class="flex items-center justify-between border-b border-divider pb-3">
+      <h3 class="font-display text-xl uppercase font-semibold text-textMain">Configurações do Timer</h3>
+      <button id="closeSettingsBtn" class="p-1.5 rounded-xl bg-surface2 text-textDim hover:text-textMain">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3">
+      <label class="flex flex-col gap-1 bg-bg p-3 rounded-2xl border border-divider">
+        <span class="text-[11px] text-textDim font-semibold uppercase">Foco (min)</span>
+        <input id="setFocusMin" type="number" min="5" max="120" step="5" class="bg-transparent font-mono text-lg font-bold text-textMain focus:outline-none">
+      </label>
+      <label class="flex flex-col gap-1 bg-bg p-3 rounded-2xl border border-divider">
+        <span class="text-[11px] text-textDim font-semibold uppercase">Curta (min)</span>
+        <input id="setShortMin" type="number" min="5" max="60" step="5" class="bg-transparent font-mono text-lg font-bold text-textMain focus:outline-none">
+      </label>
+      <label class="flex flex-col gap-1 bg-bg p-3 rounded-2xl border border-divider">
+        <span class="text-[11px] text-textDim font-semibold uppercase">Longa (min)</span>
+        <input id="setLongMin" type="number" min="5" max="90" step="5" class="bg-transparent font-mono text-lg font-bold text-textMain focus:outline-none">
+      </label>
+    </div>
+
+    <div class="space-y-3 pt-1">
+      <label class="flex items-center justify-between cursor-pointer">
+        <span class="text-xs text-textMain font-medium">Ciclos até a Pausa Longa</span>
+        <input id="setLongInterval" type="number" min="1" max="10" class="w-16 bg-bg border border-divider rounded-xl px-2.5 py-1.5 text-center font-mono text-xs font-bold text-textMain">
+      </label>
+      <label class="flex items-center justify-between cursor-pointer">
+        <span class="text-xs text-textMain font-medium">Iniciar Pausas Automaticamente</span>
+        <input id="setAutoBreak" type="checkbox" class="w-4 h-4 accent-accent rounded cursor-pointer">
+      </label>
+      <label class="flex items-center justify-between cursor-pointer">
+        <span class="text-xs text-textMain font-medium">Iniciar Foco Automaticamente</span>
+        <input id="setAutoFocus" type="checkbox" class="w-4 h-4 accent-accent rounded cursor-pointer">
+      </label>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-3 border-t border-divider">
+      <button id="saveSettingsBtn" class="w-full py-2.5 rounded-xl theme-bg text-bg font-display uppercase font-bold tracking-wider text-sm">
+        Salvar Preferências
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   STATE & STORAGE (FULL PERSISTENCE IN LOCALSTORAGE)
+   ========================================================================== */
+const STORAGE_KEY = "focusflow_pomodoro_v2";
+
+const DEFAULT_SETTINGS = {
+  focusMin: 25,
+  shortMin: 5,
+  longMin: 15,
+  longInterval: 3, // 3 sessões para ir para a pausa longa
+  autoBreak: true, // Mudar e iniciar pausa automaticamente ao acabar o foco
+  autoFocus: true
+};
+
+const MODE_META = {
+  focus: { label: "Sessão de Foco", color: "#FF6B6B", glow: "rgba(255, 107, 107, 0.22)" },
+  shortBreak: { label: "Pausa Curta · Respire", color: "#10B981", glow: "rgba(16, 185, 129, 0.22)" },
+  longBreak: { label: "Pausa Longa · Descanse", color: "#3B82F6", glow: "rgba(59, 130, 246, 0.22)" }
+};
+
+function loadAppData() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (raw && typeof raw === "object") {
+      const mergedSettings = { ...DEFAULT_SETTINGS, ...(raw.settings || {}) };
+      const savedMode = raw.timerState?.currentMode || "focus";
+      const defaultTotal =
+        savedMode === "focus"
+          ? mergedSettings.focusMin * 60
+          : savedMode === "shortBreak"
+          ? mergedSettings.shortMin * 60
+          : mergedSettings.longMin * 60;
+
+      return {
+        settings: mergedSettings,
+        tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
+        activeTaskId: raw.activeTaskId || null,
+        stats: raw.stats || { pomodoros: 0, minutes: 0, history: [] },
+        completedCycles: Number.isInteger(raw.completedCycles) ? raw.completedCycles : 0,
+        ambientVolume: typeof raw.ambientVolume === "number" ? raw.ambientVolume : 35,
+        timerState: {
+          currentMode: savedMode,
+          totalSeconds: raw.timerState?.totalSeconds || defaultTotal,
+          remainingSeconds:
+            typeof raw.timerState?.remainingSeconds === "number" && raw.timerState.remainingSeconds > 0
+              ? raw.timerState.remainingSeconds
+              : defaultTotal
+        }
+      };
+    }
+  } catch (e) {}
+
+  return {
+    settings: { ...DEFAULT_SETTINGS },
+    tasks: [
+      { id: "t1", title: "Planejar prioridades do dia", est: 2, donePomos: 0, completed: false },
+      { id: "t2", title: "Sessão de estudo ou código profundo", est: 3, donePomos: 0, completed: false }
+    ],
+    activeTaskId: "t1",
+    stats: { pomodoros: 0, minutes: 0, history: [] },
+    completedCycles: 0,
+    ambientVolume: 35,
+    timerState: {
+      currentMode: "focus",
+      totalSeconds: DEFAULT_SETTINGS.focusMin * 60,
+      remainingSeconds: DEFAULT_SETTINGS.focusMin * 60
+    }
+  };
+}
+
+let state = loadAppData();
+
+/* ==========================================================================
+   TIMER ENGINE
+   ========================================================================== */
+let currentMode = state.timerState.currentMode;
+let totalSeconds = state.timerState.totalSeconds;
+let remainingSeconds = state.timerState.remainingSeconds;
+let isRunning = false;
+let timerInterval = null;
+
+function saveAppData() {
+  try {
+    state.timerState = {
+      currentMode,
+      totalSeconds,
+      remainingSeconds
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {}
+}
+
+const timeDisplay = document.getElementById("timeDisplay");
+const timerRing = document.getElementById("timerRing");
+const modeBadge = document.getElementById("modeBadge");
+const startPauseBtn = document.getElementById("startPauseBtn");
+const startPauseText = document.getElementById("startPauseText");
+const startPauseIcon = document.getElementById("startPauseIcon");
+const cycleDots = document.getElementById("cycleDots");
+const activeTaskBanner = document.getElementById("activeTaskBanner");
+const ambientVolumeSlider = document.getElementById("ambientVolume");
+
+if (ambientVolumeSlider) {
+  ambientVolumeSlider.value = state.ambientVolume;
+}
+
+function getDurationForMode(mode) {
+  if (mode === "focus") return state.settings.focusMin * 60;
+  if (mode === "shortBreak") return state.settings.shortMin * 60;
+  return state.settings.longMin * 60;
+}
+
+function applyTheme(mode) {
+  const meta = MODE_META[mode];
+  document.documentElement.style.setProperty("--theme-color", meta.color);
+  document.documentElement.style.setProperty("--theme-glow", meta.glow);
+  modeBadge.textContent = meta.label;
+
+  document.querySelectorAll(".mode-tab").forEach(btn => {
+    const active = btn.dataset.mode === mode;
+    btn.className = `mode-tab py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+      active ? "theme-bg text-bg shadow" : "text-textDim hover:text-textMain"
+    }`;
+  });
+}
+
+function formatClock(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function updateTimerUI() {
+  const formatted = formatClock(remainingSeconds);
+  timeDisplay.textContent = formatted;
+  document.title = `${formatted} · ${MODE_META[currentMode].label} | FocusFlow`;
+
+  const circumference = 666;
+  const pct = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0;
+  timerRing.style.strokeDashoffset = circumference * (1 - pct);
+
+  // Render cycle dots (3 sessions until long break by default)
+  cycleDots.innerHTML = "";
+  const interval = state.settings.longInterval;
+  const currentInCycle = state.completedCycles % interval;
+  for (let i = 0; i < interval; i++) {
+    const dot = document.createElement("span");
+    const filled = i < currentInCycle;
+    dot.className = `w-2.5 h-2.5 rounded-full transition-all ${
+      filled ? "theme-bg scale-110" : "bg-surface3"
+    }`;
+    cycleDots.appendChild(dot);
+  }
+
+  // Active task banner
+  const activeTask = state.tasks.find(t => t.id === state.activeTaskId);
+  activeTaskBanner.textContent = activeTask
+    ? `🎯 ${activeTask.title} (${activeTask.donePomos}/${activeTask.est})`
+    : "Nenhuma tarefa selecionada";
+}
+
+function switchMode(mode, autoStart = false, playSwitchSound = false) {
+  pauseTimer(false);
+  currentMode = mode;
+  totalSeconds = getDurationForMode(mode);
+  remainingSeconds = totalSeconds;
+  applyTheme(mode);
+  updateTimerUI();
+  saveAppData();
+  if (autoStart) startTimer(playSwitchSound);
+}
+
+function startTimer(withSound = true) {
+  if (isRunning) return;
+  isRunning = true;
+  if (withSound) playSoundEffect("start");
+  startPauseText.textContent = "Pausar";
+  startPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+
+  timerInterval = setInterval(() => {
+    remainingSeconds--;
+    saveAppData();
+    if (remainingSeconds <= 0) {
+      completeCurrentSession();
+    } else {
+      updateTimerUI();
+    }
+  }, 1000);
+}
+
+function pauseTimer(withSound = false) {
+  if (isRunning && withSound) {
+    playSoundEffect("pause");
+  }
+  isRunning = false;
+  clearInterval(timerInterval);
+  startPauseText.textContent = "Iniciar";
+  startPauseIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+  saveAppData();
+}
+
+function completeCurrentSession() {
+  pauseTimer(false);
+  playSoundEffect("complete");
+
+  if (currentMode === "focus") {
+    const focusedMins = Math.round(totalSeconds / 60);
+    state.stats.pomodoros += 1;
+    state.stats.minutes += focusedMins;
+    state.completedCycles += 1;
+
+    // Increment active task pomodoro count
+    const activeTask = state.tasks.find(t => t.id === state.activeTaskId);
+    const taskName = activeTask ? activeTask.title : "Sessão Livre de Foco";
+    if (activeTask) {
+      activeTask.donePomos += 1;
+    }
+
+    const nowStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    state.stats.history.unshift({ time: nowStr, title: taskName, mins: focusedMins });
+    if (state.stats.history.length > 25) state.stats.history.pop();
+
+    renderTasks();
+    renderStats();
+
+    // A cada 3 sessões completas (ou o intervalo configurado), vai para a Pausa Longa; senão Pausa Curta
+    const isLongBreakDue = state.completedCycles % state.settings.longInterval === 0;
+    const nextMode = isLongBreakDue ? "longBreak" : "shortBreak";
+    switchMode(nextMode, state.settings.autoBreak, false);
+  } else {
+    switchMode("focus", state.settings.autoFocus, false);
+  }
+}
+
+/* ==========================================================================
+   WEB AUDIO SYNTHESIZER (START, PAUSE, COMPLETE + AMBIENT SOUND)
+   ========================================================================== */
+let audioCtx = null;
+let ambientNode = null;
+let ambientGain = null;
+let currentSoundMode = "off";
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
+function playSoundEffect(type) {
+  try {
+    ensureAudioContext();
+    const now = audioCtx.currentTime;
+
+    if (type === "start") {
+      // Som ascendente duplo para Iniciar
+      const freqs = [440, 659.25];
+      freqs.forEach((f, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(f, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.14, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.16);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.16);
+      });
+    } else if (type === "pause") {
+      // Som descendente suave para Pausar
+      const freqs = [587.33, 392.0];
+      freqs.forEach((f, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(f, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.14, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.16);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.16);
+      });
+    } else if (type === "complete") {
+      // Acorde melódico de conclusão de tempo
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now + i * 0.13);
+        gain.gain.setValueAtTime(0.22, now + i * 0.13);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.13 + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.13);
+        osc.stop(now + i * 0.13 + 0.4);
+      });
+    }
+  } catch (e) {}
+}
+
+function stopAmbientSound() {
+  if (ambientNode) {
+    try {
+      if (ambientNode.stop) ambientNode.stop();
+      if (ambientNode.disconnect) ambientNode.disconnect();
+    } catch (e) {}
+    ambientNode = null;
+  }
+}
+
+function startAmbientSound(mode) {
+  stopAmbientSound();
+  currentSoundMode = mode;
+
+  document.querySelectorAll(".sound-btn").forEach(btn => {
+    const active = btn.dataset.sound === mode;
+    btn.className = `sound-btn py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+      active
+        ? "theme-border bg-surface2 text-textMain"
+        : "border-divider bg-bg text-textDim hover:text-textMain"
+    }`;
+  });
+
+  if (mode === "off") return;
+
+  try {
+    ensureAudioContext();
+    const volSlider = document.getElementById("ambientVolume");
+    const volValue = (Number(volSlider.value) / 100) * 0.25;
+
+    ambientGain = audioCtx.createGain();
+    ambientGain.gain.setValueAtTime(volValue, audioCtx.currentTime);
+    ambientGain.connect(audioCtx.destination);
+
+    if (mode === "brown" || mode === "rain") {
+      const bufferSize = 2 * audioCtx.sampleRate;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      let lastOut = 0.0;
+
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        if (mode === "brown") {
+          output[i] = (lastOut + 0.02 * white) / 1.02;
+          lastOut = output[i];
+          output[i] *= 3.5;
+        } else {
+          // Soft filtered rain texture
+          output[i] = (lastOut + 0.12 * white) / 1.12;
+          lastOut = output[i];
+          output[i] *= 1.6;
+        }
+      }
+
+      const whiteNoise = audioCtx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      whiteNoise.loop = true;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = mode === "brown" ? 420 : 1100;
+
+      whiteNoise.connect(filter);
+      filter.connect(ambientGain);
+      whiteNoise.start(0);
+      ambientNode = whiteNoise;
+    } else if (mode === "binaural") {
+      // 200Hz Left + 240Hz Right = 40Hz Gamma/Alpha Focus Wave
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      osc1.type = "sine";
+      osc2.type = "sine";
+      osc1.frequency.value = 200;
+      osc2.frequency.value = 240;
+
+      osc1.connect(ambientGain);
+      osc2.connect(ambientGain);
+      osc1.start();
+      osc2.start();
+
+      ambientNode = {
+        stop: () => {
+          osc1.stop();
+          osc2.stop();
+        },
+        disconnect: () => {
+          osc1.disconnect();
+          osc2.disconnect();
+        }
+      };
+    }
+  } catch (e) {
+    console.warn("Erro ao iniciar áudio ambiente:", e);
+  }
+}
+
+document.querySelectorAll(".sound-btn").forEach(btn => {
+  btn.addEventListener("click", () => startAmbientSound(btn.dataset.sound));
+});
+
+document.getElementById("ambientVolume").addEventListener("input", e => {
+  const sliderVal = Number(e.target.value);
+  state.ambientVolume = sliderVal;
+  saveAppData();
+  if (ambientGain && audioCtx) {
+    const v = (sliderVal / 100) * 0.25;
+    ambientGain.gain.setValueAtTime(v, audioCtx.currentTime);
+  }
+});
+
+/* ==========================================================================
+   TASK MANAGER & STATS UI
+   ========================================================================== */
+const taskList = document.getElementById("taskList");
+const tasksSummaryText = document.getElementById("tasksSummaryText");
+const historyList = document.getElementById("historyList");
+
+function renderTasks() {
+  taskList.innerHTML = "";
+  const pendingCount = state.tasks.filter(t => !t.completed).length;
+  const totalEst = state.tasks.reduce((acc, t) => acc + (t.completed ? 0 : Math.max(0, t.est - t.donePomos)), 0);
+  tasksSummaryText.textContent = `${pendingCount} pendente(s) · ~${totalEst * state.settings.focusMin} min restantes`;
+
+  if (state.tasks.length === 0) {
+    taskList.innerHTML = `<li class="text-xs text-textDim text-center py-6 border border-dashed border-divider rounded-2xl">Nenhuma tarefa na fila. Adicione uma acima!</li>`;
+    updateTimerUI();
+    return;
+  }
+
+  state.tasks.forEach(task => {
+    const isSelected = task.id === state.activeTaskId;
+    const li = document.createElement("li");
+    li.className = `group flex items-center justify-between gap-3 p-3 rounded-2xl border transition cursor-pointer ${
+      isSelected
+        ? "bg-surface2 theme-border"
+        : "bg-bg border-divider hover:border-textDim/40"
+    } ${task.completed ? "opacity-55" : ""}`;
+
+    li.innerHTML = `
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <button type="button" class="toggle-complete-btn w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition ${
+          task.completed ? "bg-shortBreak border-shortBreak text-bg" : "border-textDim hover:border-white"
+        }">
+          ${task.completed ? `<svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ""}
+        </button>
+        <span class="text-xs sm:text-sm font-medium truncate ${task.completed ? "line-through text-textDim" : "text-textMain"}">
+          ${task.title}
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="font-mono text-xs px-2 py-0.5 rounded-lg bg-surface border border-divider text-textDim">
+          🍅 ${task.donePomos}/${task.est}
+        </span>
+        <button type="button" class="delete-task-btn p-1 rounded-lg text-textDim hover:text-red-400 opacity-70 group-hover:opacity-100 transition" title="Excluir tarefa">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    `;
+
+    li.addEventListener("click", () => {
+      state.activeTaskId = task.id;
+      saveAppData();
+      renderTasks();
+      updateTimerUI();
+    });
+
+    li.querySelector(".toggle-complete-btn").addEventListener("click", e => {
+      e.stopPropagation();
+      task.completed = !task.completed;
+      saveAppData();
+      renderTasks();
+      renderStats();
+    });
+
+    li.querySelector(".delete-task-btn").addEventListener("click", e => {
+      e.stopPropagation();
+      state.tasks = state.tasks.filter(t => t.id !== task.id);
+      if (state.activeTaskId === task.id) {
+        state.activeTaskId = state.tasks[0]?.id || null;
+      }
+      saveAppData();
+      renderTasks();
+      renderStats();
+    });
+
+    taskList.appendChild(li);
+  });
+
+  updateTimerUI();
+}
+
+function renderStats() {
+  document.getElementById("statPomodoros").textContent = state.stats.pomodoros;
+  document.getElementById("statMinutes").textContent = `${state.stats.minutes}m`;
+  document.getElementById("statTasks").textContent = state.tasks.filter(t => t.completed).length;
+
+  historyList.innerHTML = "";
+  if (!state.stats.history || state.stats.history.length === 0) {
+    historyList.innerHTML = `<li class="text-textDim/60 italic">Nenhum ciclo concluído hoje ainda.</li>`;
+    return;
+  }
+
+  state.stats.history.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "flex items-center justify-between bg-bg px-3 py-2 rounded-xl border border-divider/60";
+    li.innerHTML = `
+      <span class="truncate pr-2 text-textMain font-medium">🍅 ${item.title}</span>
+      <span class="font-mono text-[11px] text-textDim shrink-0">${item.mins}m · ${item.time}</span>
+    `;
+    historyList.appendChild(li);
+  });
+}
+
+/* ==========================================================================
+   EVENT LISTENERS & CONTROLS
+   ========================================================================== */
+startPauseBtn.addEventListener("click", () => {
+  if (isRunning) pauseTimer(true);
+  else startTimer(true);
+});
+
+document.getElementById("resetTimerBtn").addEventListener("click", () => {
+  pauseTimer(true);
+  totalSeconds = getDurationForMode(currentMode);
+  remainingSeconds = totalSeconds;
+  updateTimerUI();
+  saveAppData();
+});
+
+document.getElementById("skipTimerBtn").addEventListener("click", () => {
+  completeCurrentSession();
+});
+
+// Diminuir e Aumentar de 5 em 5 minutos (300 segundos) e atualizar também no cache
+document.getElementById("minusMinBtn").addEventListener("click", () => {
+  remainingSeconds = Math.max(300, remainingSeconds - 300);
+  totalSeconds = Math.max(300, remainingSeconds);
+  const newMins = Math.round(totalSeconds / 60);
+  if (currentMode === "focus") state.settings.focusMin = newMins;
+  else if (currentMode === "shortBreak") state.settings.shortMin = newMins;
+  else state.settings.longMin = newMins;
+  updateTimerUI();
+  renderTasks();
+  saveAppData();
+});
+
+document.getElementById("plusMinBtn").addEventListener("click", () => {
+  remainingSeconds += 300;
+  totalSeconds = Math.max(totalSeconds, remainingSeconds);
+  const newMins = Math.round(totalSeconds / 60);
+  if (currentMode === "focus") state.settings.focusMin = newMins;
+  else if (currentMode === "shortBreak") state.settings.shortMin = newMins;
+  else state.settings.longMin = newMins;
+  updateTimerUI();
+  renderTasks();
+  saveAppData();
+});
+
+document.querySelectorAll(".mode-tab").forEach(btn => {
+  btn.addEventListener("click", () => switchMode(btn.dataset.mode, false, false));
+});
+
+// Add Task Form
+const taskTitleInput = document.getElementById("taskTitleInput");
+const taskEstInput = document.getElementById("taskEstInput");
+
+document.getElementById("decEstBtn").addEventListener("click", () => {
+  taskEstInput.value = Math.max(1, Number(taskEstInput.value) - 1);
+});
+document.getElementById("incEstBtn").addEventListener("click", () => {
+  taskEstInput.value = Math.min(20, Number(taskEstInput.value) + 1);
+});
+
+document.getElementById("addTaskForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const title = taskTitleInput.value.trim();
+  if (!title) return;
+  const est = Math.max(1, Number(taskEstInput.value) || 1);
+  const newTask = {
+    id: "task_" + Date.now(),
+    title,
+    est,
+    donePomos: 0,
+    completed: false
+  };
+  state.tasks.push(newTask);
+  if (!state.activeTaskId) state.activeTaskId = newTask.id;
+  taskTitleInput.value = "";
+  taskEstInput.value = "1";
+  saveAppData();
+  renderTasks();
+});
+
+document.getElementById("clearDoneTasksBtn").addEventListener("click", () => {
+  state.tasks = state.tasks.filter(t => !t.completed);
+  if (!state.tasks.some(t => t.id === state.activeTaskId)) {
+    state.activeTaskId = state.tasks[0]?.id || null;
+  }
+  saveAppData();
+  renderTasks();
+  renderStats();
+});
+
+document.getElementById("resetStatsBtn").addEventListener("click", () => {
+  state.stats = { pomodoros: 0, minutes: 0, history: [] };
+  state.completedCycles = 0;
+  saveAppData();
+  renderStats();
+  updateTimerUI();
+});
+
+// Settings Modal
+const settingsModal = document.getElementById("settingsModal");
+const setFocusMin = document.getElementById("setFocusMin");
+const setShortMin = document.getElementById("setShortMin");
+const setLongMin = document.getElementById("setLongMin");
+const setLongInterval = document.getElementById("setLongInterval");
+const setAutoBreak = document.getElementById("setAutoBreak");
+const setAutoFocus = document.getElementById("setAutoFocus");
+
+document.getElementById("openSettingsBtn").addEventListener("click", () => {
+  setFocusMin.value = state.settings.focusMin;
+  setShortMin.value = state.settings.shortMin;
+  setLongMin.value = state.settings.longMin;
+  setLongInterval.value = state.settings.longInterval;
+  setAutoBreak.checked = state.settings.autoBreak;
+  setAutoFocus.checked = state.settings.autoFocus;
+  settingsModal.classList.remove("hidden");
+  settingsModal.classList.add("flex");
+});
+
+document.getElementById("closeSettingsBtn").addEventListener("click", () => {
+  settingsModal.classList.add("hidden");
+  settingsModal.classList.remove("flex");
+});
+
+document.getElementById("saveSettingsBtn").addEventListener("click", () => {
+  state.settings.focusMin = Math.max(5, Number(setFocusMin.value) || 25);
+  state.settings.shortMin = Math.max(5, Number(setShortMin.value) || 5);
+  state.settings.longMin = Math.max(5, Number(setLongMin.value) || 15);
+  state.settings.longInterval = Math.max(1, Number(setLongInterval.value) || 3);
+  state.settings.autoBreak = setAutoBreak.checked;
+  state.settings.autoFocus = setAutoFocus.checked;
+
+  if (!isRunning) {
+    totalSeconds = getDurationForMode(currentMode);
+    remainingSeconds = totalSeconds;
+  }
+  saveAppData();
+  updateTimerUI();
+  renderTasks();
+  settingsModal.classList.add("hidden");
+  settingsModal.classList.remove("flex");
+});
+
+// Keyboard Shortcuts (Space = Start/Pause, R = Reset)
+window.addEventListener("keydown", e => {
+  if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (isRunning) pauseTimer(true);
+    else startTimer(true);
+  } else if (e.key.toLowerCase() === "r") {
+    pauseTimer(true);
+    totalSeconds = getDurationForMode(currentMode);
+    remainingSeconds = totalSeconds;
+    updateTimerUI();
+    saveAppData();
+  }
+});
+
+// Initialize App
+applyTheme(currentMode);
+renderTasks();
+renderStats();
+updateTimerUI();
+</script>
+</body>
+</html>
