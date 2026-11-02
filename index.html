@@ -91,7 +91,7 @@
           <h1 class="font-display text-2xl lg:text-3xl font-bold uppercase tracking-wide leading-none">
             FocusFlow
           </h1>
-          <span class="text-[10px] uppercase tracking-wider bg-surface2 px-2.5 py-0.5 rounded-full text-accent font-semibold border border-divider">v2.5 Pro</span>
+          <span class="text-[10px] uppercase tracking-wider bg-surface2 px-2.5 py-0.5 rounded-full text-accent font-semibold border border-divider">v2.6 Pro</span>
         </div>
         <p class="text-xs text-textDim mt-1">Ambiente de Trabalho Focado · Som Binaural · Gestão de Tarefas</p>
       </div>
@@ -197,6 +197,8 @@
               <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
             </svg>
           </button>
+          <!-- Status of the five-second end-of-session alert -->
+          <p id="transitionStatus" class="hidden mt-4 text-center text-xs font-medium text-textDim" role="status" aria-live="polite"></p>
         </div>
       </div>
 
@@ -231,6 +233,7 @@
             <span>🧠 Alpha 40Hz</span>
           </button>
         </div>
+        <p id="ambientStatus" class="mt-3 text-[11px] text-textDim" role="status" aria-live="polite"></p>
       </div>
 
     </div>
@@ -395,6 +398,9 @@ function loadAppData() {
         stats: raw.stats || { pomodoros: 0, minutes: 0, history: [] },
         completedCycles: Number.isInteger(raw.completedCycles) ? raw.completedCycles : 0,
         ambientVolume: typeof raw.ambientVolume === "number" ? raw.ambientVolume : 35,
+        // Only the preference is persisted; sound never starts automatically on page load.
+        focusSoundMode: ["off", "brown", "rain", "binaural"].includes(raw.focusSoundMode)
+          ? raw.focusSoundMode : "off",
         timerState: {
           currentMode: savedMode,
           totalSeconds: raw.timerState?.totalSeconds || defaultTotal,
@@ -417,6 +423,7 @@ function loadAppData() {
     stats: { pomodoros: 0, minutes: 0, history: [] },
     completedCycles: 0,
     ambientVolume: 35,
+    focusSoundMode: "off",
     timerState: {
       currentMode: "focus",
       totalSeconds: DEFAULT_SETTINGS.focusMin * 60,
@@ -435,6 +442,34 @@ let totalSeconds = state.timerState.totalSeconds;
 let remainingSeconds = state.timerState.remainingSeconds;
 let isRunning = false;
 let timerInterval = null;
+const END_ALERT_MS = 5000;
+let transitionTimeout = null;
+let isTransitioning = false;
+let transitionOscillators = [];
+const transitionStatus = document.getElementById("transitionStatus");
+const skipTimerBtn = document.getElementById("skipTimerBtn");
+
+function updateTransitionUI(message = "") {
+  transitionStatus.textContent = message;
+  transitionStatus.classList.toggle("hidden", !message);
+  startPauseBtn.disabled = Boolean(message);
+  skipTimerBtn.disabled = Boolean(message);
+  [startPauseBtn, skipTimerBtn].forEach(button => {
+    button.classList.toggle("opacity-50", Boolean(message));
+    button.classList.toggle("cursor-not-allowed", Boolean(message));
+  });
+  if (message) startPauseText.textContent = "Aguarde";
+}
+
+function cancelPendingTransition() {
+  if (transitionTimeout !== null) {
+    clearTimeout(transitionTimeout);
+    transitionTimeout = null;
+  }
+  isTransitioning = false;
+  stopEndAlert();
+  updateTransitionUI();
+}
 
 function saveAppData() {
   try {
@@ -517,19 +552,27 @@ function updateTimerUI() {
 }
 
 function switchMode(mode, autoStart = false, playSwitchSound = false) {
+  // A manual mode switch also cancels a pending 5-second transition.
+  cancelPendingTransition();
   pauseTimer(false);
+  if (mode !== "focus") stopAmbientSound();
   currentMode = mode;
   totalSeconds = getDurationForMode(mode);
   remainingSeconds = totalSeconds;
   applyTheme(mode);
   updateTimerUI();
+  updateSoundUI();
   saveAppData();
   if (autoStart) startTimer(playSwitchSound);
 }
 
 function startTimer(withSound = true) {
-  if (isRunning) return;
+  if (isRunning || isTransitioning) return;
   isRunning = true;
+  // The saved focus sound comes back when FOCUS starts, not during a break.
+  if (currentMode === "focus" && currentSoundMode !== state.focusSoundMode) {
+    startAmbientSound(state.focusSoundMode, false);
+  }
   if (withSound) playSoundEffect("start");
   startPauseText.textContent = "Pausar";
   startPauseIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
@@ -557,36 +600,48 @@ function pauseTimer(withSound = false) {
 }
 
 function completeCurrentSession() {
+  if (isTransitioning) return;
   pauseTimer(false);
-  playSoundEffect("complete");
+  remainingSeconds = 0;
+  updateTimerUI();
 
+  // Mute ambient audio immediately when focus ends, but preserve its preference.
+  if (currentMode === "focus") stopAmbientSound();
+
+  let nextMode;
+  let autoStart;
   if (currentMode === "focus") {
     const focusedMins = Math.round(totalSeconds / 60);
     state.stats.pomodoros += 1;
     state.stats.minutes += focusedMins;
     state.completedCycles += 1;
 
-    // Increment active task pomodoro count
     const activeTask = state.tasks.find(t => t.id === state.activeTaskId);
     const taskName = activeTask ? activeTask.title : "Sessão Livre de Foco";
-    if (activeTask) {
-      activeTask.donePomos += 1;
-    }
+    if (activeTask) activeTask.donePomos += 1;
 
     const nowStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     state.stats.history.unshift({ time: nowStr, title: taskName, mins: focusedMins });
     if (state.stats.history.length > 25) state.stats.history.pop();
-
     renderTasks();
     renderStats();
 
-    // A cada 3 sessões completas (ou o intervalo configurado), vai para a Pausa Longa; senão Pausa Curta
-    const isLongBreakDue = state.completedCycles % state.settings.longInterval === 0;
-    const nextMode = isLongBreakDue ? "longBreak" : "shortBreak";
-    switchMode(nextMode, state.settings.autoBreak, false);
+    nextMode = state.completedCycles % state.settings.longInterval === 0 ? "longBreak" : "shortBreak";
+    autoStart = state.settings.autoBreak;
   } else {
-    switchMode("focus", state.settings.autoFocus, false);
+    nextMode = "focus";
+    autoStart = state.settings.autoFocus;
   }
+
+  saveAppData();
+  isTransitioning = true;
+  const nextLabel = nextMode === "focus" ? "Foco" : nextMode === "shortBreak" ? "Pausa curta" : "Pausa longa";
+  updateTransitionUI(`🔔 Sessão finalizada · ${nextLabel} em 5 segundos`);
+  playEndAlert();
+  transitionTimeout = setTimeout(() => {
+    transitionTimeout = null;
+    switchMode(nextMode, autoStart, false);
+  }, END_ALERT_MS);
 }
 
 /* ==========================================================================
@@ -596,6 +651,8 @@ let audioCtx = null;
 let ambientNode = null;
 let ambientGain = null;
 let currentSoundMode = "off";
+const SOUND_NAMES = { off: "Desligado", brown: "Ruído Marrom", rain: "Chuva Suave", binaural: "Alpha 40Hz" };
+const ambientStatus = document.getElementById("ambientStatus");
 
 function ensureAudioContext() {
   if (!audioCtx) {
@@ -604,6 +661,47 @@ function ensureAudioContext() {
   if (audioCtx.state === "suspended") {
     audioCtx.resume();
   }
+}
+
+// Pleasant, distinct two-tone chimes repeated for ~5 seconds (no external sound files).
+// This alarm is independent from the user's ambient volume control.
+function playEndAlert() {
+  stopEndAlert();
+  try {
+    ensureAudioContext();
+    const now = audioCtx.currentTime;
+    const frequencies = currentMode === "focus" ? [659.25, 880] : [523.25, 659.25];
+    for (let i = 0; i < 7; i++) {
+      const offset = i * 0.7;
+      frequencies.forEach((frequency, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = frequency;
+        const when = now + offset;
+        const peak = index === 0 ? 0.085 : 0.04;
+        gain.gain.setValueAtTime(0.0001, when);
+        gain.gain.exponentialRampToValueAtTime(peak, when + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.62);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(when);
+        osc.stop(when + 0.62);
+        transitionOscillators.push({ osc, gain });
+      });
+    }
+  } catch (e) {
+    stopEndAlert();
+  }
+}
+
+function stopEndAlert() {
+  transitionOscillators.forEach(({ osc, gain }) => {
+    try { osc.stop(); } catch (e) {}
+    try { osc.disconnect(); } catch (e) {}
+    try { gain.disconnect(); } catch (e) {}
+  });
+  transitionOscillators = [];
 }
 
 function playSoundEffect(type) {
@@ -657,36 +755,64 @@ function playSoundEffect(type) {
   } catch (e) {}
 }
 
+function updateSoundUI() {
+  const onBreak = currentMode !== "focus";
+  document.querySelectorAll(".sound-btn").forEach(btn => {
+    const active = btn.dataset.sound === currentSoundMode;
+    btn.disabled = onBreak;
+    btn.setAttribute("aria-pressed", String(active));
+    btn.className = `sound-btn py-3 px-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
+      active ? "theme-border bg-surface2 text-textMain" : "border-divider bg-bg text-textDim hover:text-textMain"
+    } ${onBreak ? "opacity-50 cursor-not-allowed" : ""}`;
+  });
+  if (onBreak) {
+    ambientStatus.textContent = state.focusSoundMode === "off"
+      ? "🔇 Som ambiente desligado durante as pausas."
+      : `🔇 Pausa silenciosa. ${SOUND_NAMES[state.focusSoundMode]} voltará ao iniciar o próximo foco.`;
+  } else if (currentSoundMode !== "off") {
+    ambientStatus.textContent = `🎵 Som ambiente ativo: ${SOUND_NAMES[currentSoundMode]}.`;
+  } else if (state.focusSoundMode !== "off") {
+    ambientStatus.textContent = `🔇 ${SOUND_NAMES[state.focusSoundMode]} está salvo e voltará quando iniciar o foco.`;
+  } else {
+    ambientStatus.textContent = "Escolha um som ambiente para acompanhar a sessão de foco.";
+  }
+}
+
 function stopAmbientSound() {
   if (ambientNode) {
     try {
       if (ambientNode.stop) ambientNode.stop();
       if (ambientNode.disconnect) ambientNode.disconnect();
     } catch (e) {}
-    ambientNode = null;
   }
+  if (ambientGain) {
+    try { ambientGain.disconnect(); } catch (e) {}
+  }
+  ambientNode = null;
+  ambientGain = null;
+  currentSoundMode = "off";
+  updateSoundUI();
 }
 
-function startAmbientSound(mode) {
+function startAmbientSound(mode, remember = true) {
+  if (!Object.prototype.hasOwnProperty.call(SOUND_NAMES, mode)) return;
+  // Never play ambient sounds during a short/long break.
+  if (currentMode !== "focus" && mode !== "off") return;
+  if (remember && currentMode === "focus") {
+    state.focusSoundMode = mode;
+    saveAppData();
+  }
+  if (currentSoundMode === mode && (mode === "off" || ambientNode)) {
+    updateSoundUI();
+    return;
+  }
+
   stopAmbientSound();
-  currentSoundMode = mode;
-
-  document.querySelectorAll(".sound-btn").forEach(btn => {
-    const active = btn.dataset.sound === mode;
-    btn.className = `sound-btn py-3 px-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
-      active
-        ? "theme-border bg-surface2 text-textMain"
-        : "border-divider bg-bg text-textDim hover:text-textMain"
-    }`;
-  });
-
   if (mode === "off") return;
 
   try {
     ensureAudioContext();
-    const volSlider = document.getElementById("ambientVolume");
-    const volValue = (Number(volSlider.value) / 100) * 0.25;
-
+    const volValue = (Number(ambientVolumeSlider.value) / 100) * 0.25;
     ambientGain = audioCtx.createGain();
     ambientGain.gain.setValueAtTime(volValue, audioCtx.currentTime);
     ambientGain.connect(audioCtx.destination);
@@ -696,7 +822,6 @@ function startAmbientSound(mode) {
       const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
       const output = noiseBuffer.getChannelData(0);
       let lastOut = 0.0;
-
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
         if (mode === "brown") {
@@ -709,48 +834,46 @@ function startAmbientSound(mode) {
           output[i] *= 1.6;
         }
       }
-
       const whiteNoise = audioCtx.createBufferSource();
       whiteNoise.buffer = noiseBuffer;
       whiteNoise.loop = true;
-
       const filter = audioCtx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.value = mode === "brown" ? 420 : 1100;
-
       whiteNoise.connect(filter);
       filter.connect(ambientGain);
       whiteNoise.start(0);
       ambientNode = whiteNoise;
     } else if (mode === "binaural") {
-      const osc1 = audioCtx.createOscillator();
-      const osc2 = audioCtx.createOscillator();
-      osc1.type = "sine";
-      osc2.type = "sine";
-      osc1.frequency.value = 200;
-      osc2.frequency.value = 240;
-
-      osc1.connect(ambientGain);
-      osc2.connect(ambientGain);
-      osc1.start();
-      osc2.start();
-
+      // Stereo channels are needed for a true binaural difference of 40 Hz.
+      const left = audioCtx.createOscillator();
+      const right = audioCtx.createOscillator();
+      const merger = audioCtx.createChannelMerger(2);
+      left.type = "sine";
+      right.type = "sine";
+      left.frequency.value = 200;
+      right.frequency.value = 240;
+      left.connect(merger, 0, 0);
+      right.connect(merger, 0, 1);
+      merger.connect(ambientGain);
+      left.start();
+      right.start();
       ambientNode = {
-        stop: () => {
-          osc1.stop();
-          osc2.stop();
-        },
-        disconnect: () => {
-          osc1.disconnect();
-          osc2.disconnect();
-        }
+        stop: () => { left.stop(); right.stop(); },
+        disconnect: () => { left.disconnect(); right.disconnect(); merger.disconnect(); }
       };
     }
-  } catch (e) {}
+    currentSoundMode = mode;
+  } catch (e) {
+    stopAmbientSound();
+  }
+  updateSoundUI();
 }
 
 document.querySelectorAll(".sound-btn").forEach(btn => {
-  btn.addEventListener("click", () => startAmbientSound(btn.dataset.sound));
+  btn.addEventListener("click", () => {
+    if (currentMode === "focus") startAmbientSound(btn.dataset.sound, true);
+  });
 });
 
 document.getElementById("ambientVolume").addEventListener("input", e => {
@@ -875,6 +998,7 @@ startPauseBtn.addEventListener("click", () => {
 });
 
 document.getElementById("resetTimerBtn").addEventListener("click", () => {
+  cancelPendingTransition();
   pauseTimer(true);
   totalSeconds = getDurationForMode(currentMode);
   remainingSeconds = totalSeconds;
@@ -1009,11 +1133,14 @@ document.getElementById("saveSettingsBtn").addEventListener("click", () => {
 // Keyboard Shortcuts (Space = Start/Pause, R = Reset)
 window.addEventListener("keydown", e => {
   if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+  if (!settingsModal.classList.contains("hidden")) return;
   if (e.code === "Space") {
+    if (isTransitioning) return;
     e.preventDefault();
     if (isRunning) pauseTimer(true);
     else startTimer(true);
   } else if (e.key.toLowerCase() === "r") {
+    cancelPendingTransition();
     pauseTimer(true);
     totalSeconds = getDurationForMode(currentMode);
     remainingSeconds = totalSeconds;
@@ -1024,6 +1151,7 @@ window.addEventListener("keydown", e => {
 
 // Initialize App
 applyTheme(currentMode);
+updateSoundUI();
 renderTasks();
 renderStats();
 updateTimerUI();
